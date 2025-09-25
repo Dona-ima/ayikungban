@@ -122,7 +122,7 @@ const UploadPage: React.FC = () => {
 
   const checkProcessingStatus = async (imageId: string, index: number) => {
     try {
-      const response = await apiClient.get(`/images/processing-status/${imageId}`);
+      const response = await apiClient.get(`/images/pdf-status/${imageId}`);
       
       if (response.data.status === 'completed') {
         setUploadStatuses(prev => prev.map((status, i) => 

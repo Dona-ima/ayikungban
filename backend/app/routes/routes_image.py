@@ -5,27 +5,26 @@ from ..config.supabase_connection import supabase
 from ..utils.user import get_current_user
 import asyncio
 from functools import partial
+from ..utils.ai_services import extract_parcelles_coordinates, determine_zone_layers, generate_pdf_summary
+from ..routes.routes_notification import create_notification
+from datetime import datetime
+from pdf2image import convert_from_bytes
+from io import BytesIO
+import uuid
+import json
 
 async def process_pdf_upload(user_id: str, pdf_id: str, file_content: bytes, pdf_url: str):
     """Traitement asynchrone du PDF uploadé"""
     try:
-        # Mettre à jour le statut pour indiquer le début de la conversion
-        supabase.table("images").update({
-            "processing_status": "converting",
-            "zones_result": json.dumps({
-                "status": "converting",
-                "message": "Conversion du PDF en images..."
-            })
-        }).eq("id", pdf_id).execute()
-
         # Conversion PDF en images
         loop = asyncio.get_event_loop()
-        images = await loop.run_in_executor(None, convert_from_bytes, file_content, 200)
+        images = await loop.run_in_executor(None, convert_from_bytes, file_content, 100)
+        print(f"Conversion PDF terminée : {len(images)} pages trouvées")
         
         for i, image in enumerate(images):
             # Conversion et compression de l'image
             img_byte_arr = BytesIO()
-            image.save(img_byte_arr, format="PNG", optimize=True, quality=85)
+            image.save(img_byte_arr, format="PNG", optimize=True, quality=50)
             img_bytes = img_byte_arr.getvalue()
 
             # Upload image
@@ -36,17 +35,14 @@ async def process_pdf_upload(user_id: str, pdf_id: str, file_content: bytes, pdf
 
             # Créer l'enregistrement image
             image_id = str(uuid.uuid4())
+            # CORRECT
             image_data = {
                 "id": image_id,
                 "filename": image_filename,
                 "upload_date": datetime.utcnow().isoformat(),
                 "user_id": user_id,
                 "file_path": img_url,
-                "processing_status": "processing",
-                "zones_result": json.dumps({
-                    "original_pdf": pdf_url,
-                    "pdf_id": pdf_id
-                })
+                "processing_status": "processing"
             }
             supabase.table("images").insert(image_data).execute()
 
@@ -59,29 +55,12 @@ async def process_pdf_upload(user_id: str, pdf_id: str, file_content: bytes, pdf
                 image_data=img_bytes
             )
 
-        # Mise à jour finale du statut PDF
-        supabase.table("images").update({
-            "processing_status": "processing",
-            "zones_result": json.dumps({
-                "total_pages": len(images)
-            })
-        }).eq("id", pdf_id).execute()
+        print(f"Traitement de toutes les pages terminé")
 
     except Exception as e:
         print(f"Erreur traitement PDF {pdf_id}: {str(e)}")
-        supabase.table("images").update({
-            "processing_status": "failed",
-            "zones_result": json.dumps({
-                "error": str(e)
-            })
-        }).eq("id", pdf_id).execute()
-from ..utils.ai_services import extract_parcelles_coordinates, determine_zone_layers, generate_pdf_summary
-from ..routes.routes_notification import create_notification
-from datetime import datetime
-from pdf2image import convert_from_bytes
-from io import BytesIO
-import uuid
-import json
+        # Ne plus mettre à jour le statut du PDF puisqu'il n'est plus en base
+
 
 router = APIRouter(prefix="/images", tags=["images"])
 
@@ -107,24 +86,7 @@ async def upload_pdf(
         supabase.storage.from_(BUCKET_NAME).upload(pdf_path, content)
         pdf_url = supabase.storage.from_(BUCKET_NAME).get_public_url(pdf_path)
 
-        # Créer un enregistrement initial pour le PDF dans la table images
-        pdf_data = {
-            "id": pdf_id,
-            "filename": file.filename,
-            "upload_date": datetime.utcnow().isoformat(),
-            "user_id": user_id,
-            "processing_status": "uploading",
-            "file_path": pdf_url
-        }
-        # Retirer l'enregistrement s'il existe déjà (au cas où)
-        try:
-            supabase.table("images").delete().eq("id", pdf_id).execute()
-        except:
-            pass
-        # Créer le nouvel enregistrement
-        supabase.table("images").insert(pdf_data).execute()
-
-        # Lancer le traitement en arrière-plan
+        # Lancer directement le traitement en arrière-plan
         background_tasks.add_task(
             process_pdf_upload,
             user_id=user_id,
@@ -198,7 +160,10 @@ async def process_full_analysis(user_id: str, image_id: str, image_url: str, ori
         # Mise à jour en base
         update_data = {
             "processing_status": "completed",
-            "zones_result": json.dumps(zones_result),
+            "zones_result": json.dumps({
+                **zones_result,
+                "original_pdf_url": original_pdf_url
+            }),
             "result_summary_pdf": pdf_public_url
         }
         result = supabase.table("images").update(update_data).eq("id", image_id).execute()
@@ -222,7 +187,7 @@ async def process_full_analysis(user_id: str, image_id: str, image_url: str, ori
         # Marquer l'image comme échouée
         supabase.table("images").update({
             "processing_status": "failed",
-            "zones_result": json.dumps({"error": str(e)}),
+            "extraction_result": json.dumps({"error": str(e)}),  # ← extraction_result
         }).eq("id", image_id).execute()
         
         # Créer une notification d'erreur
@@ -241,43 +206,40 @@ async def get_pdf_status(
     pdf_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Obtenir le statut de traitement d'un PDF et de ses images"""
+    """Obtenir le statut de traitement des images extraites d'un PDF"""
     user_id = current_user["user_id"]
     try:
         result = supabase.table("images").select(
-            "id, processing_status, zones_result"
+            "id, processing_status, extraction_result, filename"
         ).eq("user_id", user_id).execute()
         
         if not result.data:
-            raise HTTPException(status_code=404, detail="PDF non trouvé")
+            return {
+                "pdf_id": pdf_id,
+                "status": "not_found",
+                "total_pages": 0,
+                "processed_pages": 0,
+                "images": []
+            }
 
         all_records = result.data
+
         
-        # Trouver le PDF principal
-        pdf_record = next((item for item in all_records if item["id"] == pdf_id), None)
-        if not pdf_record:
-            raise HTTPException(status_code=404, detail="PDF non trouvé")
-            
-        # Trouver les images associées à ce PDF
-        images = [
-            item for item in all_records 
-            if item["id"] != pdf_id and
-            item.get("zones_result") and
-            json.loads(item["zones_result"]).get("pdf_id") == pdf_id
-        ]
+        # Trouver le PDF principal (par filename ou autre logique)
+        pdf_record = next((item for item in all_records if pdf_id in item.get("filename", "")), None)
         
-        pdf_zones = json.loads(pdf_record["zones_result"]) if pdf_record["zones_result"] else {}
+        # Ou plus simple : chercher par processing_status
+        images = [item for item in all_records if item.get("processing_status") in ["completed", "processing", "failed"]]
+        
+        completed_images = [img for img in images if img["processing_status"] == "completed"]
         
         return {
             "pdf_id": pdf_id,
-            "status": pdf_record["processing_status"],
-            "total_pages": pdf_zones.get("total_pages", 0),
-            "processed_pages": len([img for img in images if img["processing_status"] == "completed"]),
-            "error": pdf_zones.get("error"),
+            "status": "completed" if completed_images else "processing",
+            "total_pages": len(images),
+            "processed_pages": len(completed_images),
             "images": [{"id": img["id"], "status": img["processing_status"]} for img in images]
         }
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur vérification statut: {str(e)}")
 
@@ -286,17 +248,17 @@ async def get_processing_status(
     image_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Obtenir le statut de traitement d'une image spécifique"""
     user_id = current_user["user_id"]
     try:
+    
         result = supabase.table("images").select(
-            "id, processing_status, zones_result"
-        ).eq("id", image_id).eq("user_id", user_id).single().execute()
-        
-        if not result.data:
+            "id, processing_status, extraction_result, result_summary_pdf"  # ← extraction_result
+        )
+        # Vérifier si on trouve quelque chose
+        if not result.data or len(result.data) == 0:
             raise HTTPException(status_code=404, detail="Image non trouvée")
         
-        image = result.data
+        image = result.data[0]  # Prendre le premier résultat
         status = image.get("processing_status", "unknown")
         zones = json.loads(image["zones_result"]) if image["zones_result"] else {}
         
@@ -306,7 +268,8 @@ async def get_processing_status(
             "is_completed": status == "completed",
             "is_processing": status == "processing",
             "is_failed": status == "failed",
-            "error": zones.get("error")
+            "error": zones.get("error"),
+            "result_pdf": image.get("result_summary_pdf")  # AJOUT du lien PDF
         }
 
         return response

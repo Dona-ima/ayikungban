@@ -151,3 +151,6 @@ Desktop.ini
 
 
 anip/anip_data.json
+package-lock.json
+package.json
+node_modules/

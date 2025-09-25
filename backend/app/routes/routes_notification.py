@@ -74,22 +74,27 @@ async def delete_notification(
             detail=f"Erreur lors de la suppression de la notification: {str(e)}"
         )
 
-def create_notification(user_id: str, title: str, message: str, type: str, result_id: str = None, pdf_url: str = None):
-    """Crée une nouvelle notification pour l'utilisateur"""
+def create_notification(user_id: str, title: str, message: str, type: str, result_id: str, pdf_url: str = None):
     try:
+        # Vérification de l'existence de l'utilisateur
+        user_check = supabase.table("users").select("id").eq("id", user_id).execute()
+        if not user_check.data or len(user_check.data) == 0:
+            print(f"⚠️ Utilisateur {user_id} non trouvé dans la table users, notification ignorée")
+            return
+        print("\n\n\nL'id de l'utilisateur: ", user_id, " \n\n\n")
+        # Votre code existant pour créer la notification...
         notification_data = {
             "user_id": user_id,
             "title": title,
             "message": message,
             "type": type,
-            "read": False,
-            "created_at": datetime.utcnow().isoformat(),
             "result_id": result_id,
-            "pdf_url": pdf_url
+            "pdf_url": pdf_url,
+            "created_at": datetime.utcnow().isoformat(),
+            "read": False
         }
+        supabase.table("notifications").insert(notification_data).execute()
         
-        result = supabase.table("notifications").insert(notification_data).execute()
-        return result.data[0] if result.data else None
     except Exception as e:
-        print(f"Erreur lors de la création de la notification: {str(e)}")
-        return None
+        # Erreur non critique, on continue
+        print(f"⚠️ Erreur notification (non critique): {e}")
