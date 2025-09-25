@@ -12,6 +12,4 @@ class User(BaseModel):
     phone_number: Optional[str]
     address: str
     profession: Optional[str]
-    #role: Optional[str] = "user"
-    #password: Optional[str] 
     created_at: str

@@ -9,6 +9,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import ResultsPage from './pages/ResultsPage';
 import AllResultsPage from './pages/AllResultsPage';
 
+
 const App: React.FC = () => {
   return (
     <Routes>
@@ -21,6 +22,7 @@ const App: React.FC = () => {
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/results" element={<AllResultsPage />} />
       <Route path="/results/:id" element={<ResultsPage />} />
+      
     </Routes>
   );
 };

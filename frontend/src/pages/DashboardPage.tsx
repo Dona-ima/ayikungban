@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Grid, Card, CardContent, Typography, Button, Box, List, ListItem, Avatar, ListItemText, ListItemIcon } from '@mui/material';
+import { Grid, Card, CardContent, Typography, Button, Box, List, ListItem, Avatar, ListItemText, ListItemIcon, CircularProgress } from '@mui/material';
 import { PersonOutline, UploadFileOutlined, AssessmentOutlined, NotificationsNoneOutlined, LocationOn, SystemUpdateAlt, Description } from '@mui/icons-material';
+import { getCurrentUser } from '../services/userService';
+import type { User } from '../types';
 import MainLayout from '../components/MainLayout';
 
 const quickAccessItems = [
@@ -57,23 +59,52 @@ const recentActivities = [
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const today = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = today.toLocaleDateString('fr-FR', dateOptions);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getCurrentUser();
+        setUser(userData);
+      } catch (err) {
+        setError("Erreur lors du chargement des données utilisateur");
+        console.error("Erreur:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <MainLayout title="Tableau de Bord">
       <Box sx={{ p: 3 }}>
         <Box sx={{ backgroundColor: '#4caf50', color: 'white', p: 4, borderRadius: 2, mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Bonjour, M. Dupont !
-          </Typography>
-          <Typography variant="subtitle1">
-            Bienvenue sur GeoPlateforme. Explorez vos projets.
-          </Typography>
-          <Typography variant="caption" display="block" mt={2}>
-            {formattedDate}
-          </Typography>
+        {loading ? (
+          <CircularProgress color="inherit" />
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
+        ) : user ? (
+          <>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Bonjour, {user.sex === 'M' ? 'M.' : 'Mme'} {user.last_name} !
+            </Typography>
+            <Typography variant="subtitle1">
+              Bienvenue sur GeoPlateforme. Explorez vos projets.
+            </Typography>
+            <Typography variant="caption" display="block" mt={2}>
+              {formattedDate}
+            </Typography>
+          </>
+        ) : (
+          <Typography>Aucune donnée utilisateur disponible</Typography>
+        )}
         </Box>
 
         <Typography variant="h5" component="h2" gutterBottom>

@@ -13,15 +13,27 @@ def create_user_if_not_exists(npi, phone_number, first_name, last_name, sex, dat
     Crée un utilisateur dans Supabase s'il n'existe pas déjà
     """
     try:
+        import uuid
+        import logging
+        
+        logging.info(f"Vérification de l'existence de l'utilisateur avec NPI: {npi}")
+        
         # Vérifier si l'utilisateur existe déjà - SYNTAXE SUPABASE
         existing_user = db.table("users").select("*").eq("npi", npi).limit(1).execute()
         
         if existing_user.data and len(existing_user.data) > 0:
             # L'utilisateur existe déjà, retourner son ID
-            return existing_user.data[0]["id"]
+            user_id = existing_user.data[0]["id"]
+            logging.info(f"Utilisateur existant trouvé avec ID: {user_id}")
+            return user_id
+        
+        # Générer un nouvel ID
+        new_user_id = str(uuid.uuid4())
+        logging.info(f"Création d'un nouvel utilisateur avec ID: {new_user_id}")
         
         # Créer un nouvel utilisateur
         user_data = {
+            "id": new_user_id,
             "npi": npi,
             "phone_number": phone_number,
             "first_name": first_name,
@@ -30,19 +42,24 @@ def create_user_if_not_exists(npi, phone_number, first_name, last_name, sex, dat
             "date_of_birth": date_of_birth,
             "email": email,
             "address": address,
-            "profession": profession
+            "profession": profession,
+            "created_at": datetime.utcnow().isoformat()
         }
         
         # Insérer dans la base de données - SYNTAXE SUPABASE
         result = db.table("users").insert(user_data).execute()
         
-        if result.data and len(result.data) > 0:
-            return result.data[0]["id"]
-        else:
+        if not result.data:
+            logging.error(f"Échec de la création de l'utilisateur pour NPI: {npi}")
             raise HTTPException(status_code=500, detail="Erreur lors de la création de l'utilisateur")
+        
+        logging.info(f"Nouvel utilisateur créé avec succès, ID: {new_user_id}")
+        return new_user_id
             
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Erreur create_user_if_not_exists: {str(e)}")
+        logging.error(f"Erreur create_user_if_not_exists: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur base de données: {str(e)}")
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
