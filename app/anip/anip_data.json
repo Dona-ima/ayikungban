@@ -1,0 +1,46 @@
+[
+  {
+    "npi": "BEN7890123",
+    "phone_number": "98000000",
+    "first_name": "Ariane",
+    "last_name": "Agboton",
+    "sex": "F",
+    "date_of_birth": "1999-11-04",
+    "email": "agbotonariane70@gmail.com",
+    "address": "Cotonou, Benin",
+    "profession": "Data Scientist"
+  },
+  {
+    "npi": "BEN1234567",
+    "phone_number": "97000000",
+    "first_name": "Dona",
+    "last_name": "Agboton",
+    "sex": "F",
+    "date_of_birth": "1995-01-01",
+    "email": "dona.agboton@example.com",
+    "address": "Cotonou, Benin",
+    "profession": "Engineer"
+  },
+  {
+    "npi": "BEN7654321",
+    "phone_number": "96000000",
+    "first_name": "Esther",
+    "last_name": "Tchibozo",
+    "sex": "F",
+    "date_of_birth": "1993-05-15",
+    "email": "esther.tchibozo@example.com",
+    "address": "Porto-Novo, Benin",
+    "profession": "Teacher"
+  },
+    {
+    "npi": "BEN78890123",
+    "phone_number": "95000000",
+    "first_name": "Joan",
+    "last_name": "Agbo",
+    "sex": "M",
+    "date_of_birth": "1986-07-30",
+    "email": "donalienore@gmail.com",
+    "address": "Porto-Novo, Benin",
+    "profession": "Doctor"
+  }
+]
