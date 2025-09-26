@@ -8,7 +8,7 @@ import UploadPage from './pages/UploadPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ResultsPage from './pages/ResultsPage';
 import AllResultsPage from './pages/AllResultsPage';
-
+import ChatbotPage from './pages/ChatbotPage';
 
 const App: React.FC = () => {
   return (
@@ -22,7 +22,7 @@ const App: React.FC = () => {
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/results" element={<AllResultsPage />} />
       <Route path="/results/:id" element={<ResultsPage />} />
-      
+      <Route path="/chatbot" element={<ChatbotPage />} />
     </Routes>
   );
 };

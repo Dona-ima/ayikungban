@@ -1,9 +1,8 @@
-import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
-import MainLayout from '../components/MainLayout';
-import GetAppIcon from '@mui/icons-material/GetApp';
+import { Box, Typography, Grid, Card, CardContent, Button, AppBar, Toolbar, IconButton, Tooltip } from '@mui/material';
+import { ArrowBack, GetApp } from '@mui/icons-material';
 import MapDisplay from '../components/MapDisplay';
+import React from 'react';
 
 // Données fictives pour un résultat spécifique
 const mockResultDetails = {
@@ -23,11 +22,10 @@ const mockResultDetails = {
       zoom: 10,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -47,11 +45,10 @@ const mockResultDetails = {
       zoom: 11,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -71,11 +68,10 @@ const mockResultDetails = {
       zoom: 9,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -95,11 +91,10 @@ const mockResultDetails = {
       zoom: 10,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -119,11 +114,10 @@ const mockResultDetails = {
       zoom: 12,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -143,11 +137,10 @@ const mockResultDetails = {
       zoom: 13,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -167,11 +160,10 @@ const mockResultDetails = {
       zoom: 9,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -191,11 +183,10 @@ const mockResultDetails = {
       zoom: 14,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -215,11 +206,10 @@ const mockResultDetails = {
       zoom: 8,
       markers: [],
       legend: [
-        { color: '#4CAF50', label: 'Zone A: Altitude Élevée' },
-        { color: '#FFEB3B', label: 'Zone B: Pente Modérée' },
-        { color: '#FF9800', label: 'Zone C: Zone Plate' },
-        { color: '#2196F3', label: 'Zone D: Zone Inondable' },
-        { color: '#607D8B', label: 'Zone E: Zone d\'Ombre' },
+        { color: '#EF5350', label: 'Litigieuse' },
+        { color: '#2E7D32', label: 'État' },
+        { color: '#FFB300', label: 'Protégée' },
+        { color: '#29B6F6', label: 'Maritime' },
       ],
     },
   },
@@ -233,122 +223,104 @@ const ResultsPage: React.FC = () => {
 
   if (!result) {
     return (
-      <MainLayout title="Résultat Introuvable">
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" color="error" textAlign="center">
-            Le résultat avec l\'ID "{id}" n\'a pas été trouvé.
+      <Box sx={{ flexGrow: 1, backgroundColor: '#F1F8E9', minHeight: '100vh' }}>
+        <AppBar position="sticky" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none', borderBottom: '1px solid #e0e0e0' }}>
+          <Toolbar>
+            <IconButton onClick={() => navigate('/results')}><ArrowBack /></IconButton>
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold', ml: 2 }}>Résultat Introuvable</Typography>
+          </Toolbar>
+        </AppBar>
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="h6" color="error" sx={{ mb: 2 }}>
+            Le résultat avec l'ID "{id}" n'a pas été trouvé.
           </Typography>
-          <Button variant="contained" onClick={() => navigate('/results')} sx={{ mt: 2 }}>
-            Retour aux Résultats
-          </Button>
+          <Button variant="contained" onClick={() => navigate('/results')}>Retour aux Résultats</Button>
         </Box>
-      </MainLayout>
+      </Box>
     );
   }
 
   return (
-    <MainLayout title="Détails du Résultat">
-      <Box sx={{ p: 3 }}>
-        <Grid container spacing={3}>
-          {/* Left Column */}
-          <Grid component="div" item xs={12} md={4}>
-            {/* Image Téléversée */}
-            <Card sx={{ mb: 3, borderRadius: 2, boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}>
-              <CardContent>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 2 }}>
-                  Image Téléversée
-                </Typography>
-                <Box sx={{ width: '100%', height: 200, backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1, overflow: 'hidden' }}>
-                  <img src={result.uploadedImageUrl} alt="Image Téléversée" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover' }} />
-                </Box>
-              </CardContent>
-            </Card>
+    <Box sx={{ flexGrow: 1, backgroundColor: '#F1F8E9', minHeight: '100vh' }}>
+      <AppBar position="sticky" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none', borderBottom: '1px solid #e0e0e0' }}>
+        <Toolbar>
+          <IconButton onClick={() => navigate('/results')}><ArrowBack /></IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold', ml: 2 }}>Détails du Résultat</Typography>
+        </Toolbar>
+      </AppBar>
+      <Grid container sx={{ flexGrow: 1 }}>
+        {/* Left Sidebar */}
+        <Grid item xs={12} md={4} sx={{ p: 2, backgroundColor: '#C8E6C9', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Card sx={{ borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 8px 24px rgba(0,0,0,0.15)' } }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Image Téléversée</Typography>
+              <Box sx={{ width: '100%', height: 200, backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', overflow: 'hidden' }}>
+                <img src={result.uploadedImageUrl} alt="Image Téléversée" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover' }} />
+              </Box>
+            </CardContent>
+          </Card>
 
-            {/* Fichier PDF Traité */}
-            <Card sx={{ mb: 3, borderRadius: 2, boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}>
-              <CardContent>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 2 }}>
-                  Fichier PDF Traité
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 0.5 }}>
-                  {result.pdfFileName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {result.pdfFileSize}
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  startIcon={<GetAppIcon />} 
-                  fullWidth 
-                  href={result.pdfDownloadUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  sx={{
-                    backgroundColor: '#4caf50',
-                    '&:hover': { backgroundColor: '#388e3c' },
-                    textTransform: 'none',
-                  }}
-                >
-                  Télécharger PDF
-                </Button>
-              </CardContent>
-            </Card>
+          <Card sx={{ borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 8px 24px rgba(0,0,0,0.15)' } }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Fichier PDF Traité</Typography>
+              <Typography variant="body1" sx={{ mb: 0.5 }}>{result.pdfFileName}</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{result.pdfFileSize}</Typography>
+              <Button 
+                variant="contained" 
+                startIcon={<GetApp />} 
+                fullWidth 
+                href={result.pdfDownloadUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                sx={{ background: 'linear-gradient(to right, #2E7D32, #1B5E20)', '&:hover': { transform: 'scale(1.05)' } }}
+              >
+                Télécharger PDF
+              </Button>
+            </CardContent>
+          </Card>
 
-            {/* Caractéristiques du Domaine */}
-            <Card sx={{ borderRadius: 2, boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}>
-              <CardContent>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 2 }}>
-                  Caractéristiques du Domaine
-                </Typography>
-                <Grid container spacing={1}>
-                  <Grid component="div" item xs={6}><Typography variant="body2" color="text.secondary">Nom du Projet :</Typography></Grid>
-                  <Grid component="div" item xs={6}><Typography variant="body2" textAlign="right">{result.nomProjet}</Typography></Grid>
+          <Card sx={{ borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 8px 24px rgba(0,0,0,0.15)' } }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Caractéristiques du Domaine</Typography>
+              <Grid container spacing={1}>
+                <Grid item xs={6}><Typography variant="body2" color="text.secondary">Nom du Projet :</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" textAlign="right">{result.nomProjet}</Typography></Grid>
 
-                  <Grid component="div" item xs={6}><Typography variant="body2" color="text.secondary">Date de Traitement :</Typography></Grid>
-                  <Grid component="div" item xs={6}><Typography variant="body2" textAlign="right">{result.dateTraitement}</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" color="text.secondary">Date de Traitement :</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" textAlign="right">{result.dateTraitement}</Typography></Grid>
 
-                  <Grid component="div" item xs={6}><Typography variant="body2" color="text.secondary">Superficie Analysée :</Typography></Grid>
-                  <Grid component="div" item xs={6}><Typography variant="body2" textAlign="right">{result.superficieAnalysee}</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" color="text.secondary">Superficie Analysée :</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" textAlign="right">{result.superficieAnalysee}</Typography></Grid>
 
-                  <Grid component="div" item xs={6}><Typography variant="body2" color="text.secondary">Nombre de Points :</Typography></Grid>
-                  <Grid component="div" item xs={6}><Typography variant="body2" textAlign="right">{result.nombreDePoints}</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" color="text.secondary">Nombre de Points :</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" textAlign="right">{result.nombreDePoints}</Typography></Grid>
 
-                  <Grid component="div" item xs={6}><Typography variant="body2" color="text.secondary">Précision Moyenne :</Typography></Grid>
-                  <Grid component="div" item xs={6}><Typography variant="body2" textAlign="right">{result.precisionMoyenne}</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" color="text.secondary">Précision Moyenne :</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" textAlign="right">{result.precisionMoyenne}</Typography></Grid>
 
-                  <Grid component="div" item xs={6}><Typography variant="body2" color="text.secondary">Type de Terrain :</Typography></Grid>
-                  <Grid component="div" item xs={6}><Typography variant="body2" textAlign="right">{result.typeDeTerrain}</Typography></Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Right Column */}
-          <Grid component="div" item xs={12} md={8}>
-            <Card sx={{ height: '100%', borderRadius: 2, boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}>
-              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 2 }}>
-                  Carte Interactive des Résultats
-                </Typography>
-                <Box sx={{ flexGrow: 1, mb: 2, minHeight: 300 }}>
-                  <MapDisplay center={result.mapData.center} zoom={result.mapData.zoom} markers={result.mapData.markers} height="100%" />
-                </Box>
-                <Grid container spacing={1}>
-                  {result.mapData.legend.map((item, index) => (
-                    <Grid component="div" item key={index}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box sx={{ width: 16, height: 16, bgcolor: item.color, mr: 1, borderRadius: '4px' }} />
-                        <Typography variant="body2">{item.label}</Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
+                <Grid item xs={6}><Typography variant="body2" color="text.secondary">Type de Terrain :</Typography></Grid>
+                <Grid item xs={6}><Typography variant="body2" textAlign="right">{result.typeDeTerrain}</Typography></Grid>
+              </Grid>
+            </CardContent>
+          </Card>
         </Grid>
-      </Box>
-    </MainLayout>
+
+        {/* Right Column (Map) */}
+        <Grid item xs={12} md={8} sx={{ position: 'relative' }}>
+          <MapDisplay center={result.mapData.center} zoom={result.mapData.zoom} markers={[]} height="100%" />
+          <Box sx={{ position: 'absolute', bottom: 20, right: 20, backgroundColor: 'white', p: 1, borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+            {result.mapData.legend.map((item, index) => (
+              <Tooltip title={item.label} key={index}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, '&:last-child': { mb: 0 } }}>
+                  <Box sx={{ width: 20, height: 20, bgcolor: item.color, mr: 1, borderRadius: '4px' }} />
+                  <Typography variant="body2">{item.label}</Typography>
+                </Box>
+              </Tooltip>
+            ))}
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 

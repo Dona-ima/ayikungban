@@ -1,227 +1,180 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Grid, Card, CardContent, Button, Chip, CircularProgress } from '@mui/material';
-import MainLayout from '../components/MainLayout';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import { resultService, type ProcessingResult } from '../services/resultService';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Box, Typography, Grid, Card, CardContent, Chip, AppBar, Toolbar, IconButton, TextField, InputAdornment } from '@mui/material';
+import { ArrowBack, Search, CalendarToday, SquareFoot } from '@mui/icons-material';
+import { keyframes } from '@mui/system';
 
-interface ResultItemProps {
-  result: ProcessingResult;
-  onViewDetails: (imageId: string) => void;
+const cardHover = keyframes`
+  from { transform: scale(1); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  to { transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.15); background-color: #A5D6A7; }
+`;
+
+interface ResultItem {
+  id: string;
+  title: string;
+  ref: string;
+  dateTraitement: string;
+  zoneCouverture: string;
+  statut: 'Terminé' | 'En cours' | 'Échec';
 }
 
-const ResultItem: React.FC<ResultItemProps> = ({ result, onViewDetails }) => {
-  const getStatusChip = (status: string) => {
-    let color: "success" | "warning" | "error" | "default";
-    let icon: React.ReactNode;
-    let label: string;
-
-    switch (status) {
-      case 'completed':
-        color = 'success';
-        icon = <CheckCircleOutlineIcon />;
-        label = 'Terminé';
-        break;
-      case 'processing':
-        color = 'warning';
-        icon = <HourglassEmptyIcon />;
-        label = 'En cours';
-        break;
-      case 'failed':
-        color = 'error';
-        icon = <CancelOutlinedIcon />;
-        label = 'Échec';
-        break;
-      default:
-        color = 'default';
-        icon = null;
-        label = 'Inconnu';
-    }
-
-    return <Chip label={label} color={color} icon={icon} size="small" sx={{ height: 20 }} />;
-  };
-
-  return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: 2, boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}>
-      <CardContent>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
-          {result.filename}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          ID: {result.image_id}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <CalendarTodayIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-          <Typography variant="body2" color="text.secondary">
-            {formatDistanceToNow(new Date(result.created_at), { addSuffix: true, locale: fr })}
-          </Typography>
-        </Box>
-        {result.zones_result && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <DescriptionIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-            <Typography variant="body2" color="text.secondary">
-              Résultats disponibles
-            </Typography>
-          </Box>
-        )}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-            Statut :
-          </Typography>
-          {getStatusChip(result.status)}
-        </Box>
-      </CardContent>
-      <Box sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          variant="text" 
-          onClick={() => onViewDetails(result.image_id)}
-          sx={{
-            color: '#4caf50',
-            textTransform: 'none',
-            '&:hover': {
-              backgroundColor: 'rgba(76, 175, 80, 0.04)'
-            }
-          }}
-        >
-          Voir les détails
-        </Button>
-      </Box>
-    </Card>
-  );
-};
+const mockResults: ResultItem[] = [
+  {
+    id: '1',
+    title: 'Levé Topographique Centre-Ville',
+    ref: 'LEV001-2023-01-15',
+    dateTraitement: '15/01/2023',
+    zoneCouverture: '1.2 km²',
+    statut: 'Terminé',
+  },
+  {
+    id: '2',
+    title: 'Analyse Terrain Industriel',
+    ref: 'LEV002-2023-03-20',
+    dateTraitement: '20/03/2023',
+    zoneCouverture: '0.8 km²',
+    statut: 'En cours',
+  },
+  {
+    id: '3',
+    title: 'Cartographie Zone Rurale',
+    ref: 'LEV003-2023-05-10',
+    dateTraitement: '10/05/2023',
+    zoneCouverture: '5.5 km²',
+    statut: 'Terminé',
+  },
+  {
+    id: '4',
+    title: 'Vérification Périmètre Agricole',
+    ref: 'LEV004-2023-07-22',
+    dateTraitement: '22/07/2023',
+    zoneCouverture: '3.1 km²',
+    statut: 'Terminé',
+  },
+  {
+    id: '5',
+    title: 'Projet Extension Urbaine',
+    ref: 'LEV005-2023-09-01',
+    dateTraitement: '01/09/2023',
+    zoneCouverture: '2.0 km²',
+    statut: 'Échec',
+  },
+  {
+    id: '6',
+    title: 'Suivi Glissement de Terrain',
+    ref: 'LEV006-2023-11-12',
+    dateTraitement: '12/11/2023',
+    zoneCouverture: '0.3 km²',
+    statut: 'Terminé',
+  },
+  {
+    id: '7',
+    title: 'Analyse de Sol Forestier',
+    ref: 'LEV007-2024-01-20',
+    dateTraitement: '20/01/2024',
+    zoneCouverture: '7.0 km²',
+    statut: 'Terminé',
+  },
+  {
+    id: '8',
+    title: 'Modélisation Urbaine 3D',
+    ref: 'LEV008-2024-02-10',
+    dateTraitement: '10/02/2024',
+    zoneCouverture: '0.5 km²',
+    statut: 'En cours',
+  },
+  {
+    id: '9',
+    title: 'Cartographie Littorale',
+    ref: 'LEV009-2024-03-05',
+    dateTraitement: '05/03/2024',
+    zoneCouverture: '10.0 km²',
+    statut: 'Échec',
+  },
+];
 
 const AllResultsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [results, setResults] = useState<ProcessingResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    loadResults();
-  }, []);
+  const filteredResults = mockResults.filter(result => 
+    result.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    result.ref.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const loadResults = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        setError('Veuillez vous connecter pour voir les résultats');
-        navigate('/login');
-        return;
-      }
-      const response = await resultService.getAllResults();
-      setResults(response.results);
-      setError(null);
-    } catch (err: any) {
-      if (err?.response?.status === 401) {
-        setError('Session expirée. Veuillez vous reconnecter.');
-        navigate('/login');
-      } else {
-        setError('Erreur lors du chargement des résultats. Veuillez réessayer.');
-        console.error(err);
-      }
-    } finally {
-      setLoading(false);
+  const getStatusColor = (statut: ResultItem['statut']) => {
+    switch (statut) {
+      case 'Terminé': return '#2E7D32';
+      case 'En cours': return '#FFB300';
+      case 'Échec': return '#E53935';
+      default: return '#616161';
     }
   };
 
-  if (loading) {
-    return (
-      <MainLayout title="Tous les Résultats">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-          <CircularProgress />
-        </Box>
-      </MainLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainLayout title="Tous les Résultats">
-        <Box sx={{ p: 3 }}>
-          <Typography color="error" gutterBottom>{error}</Typography>
-          <Button variant="contained" onClick={loadResults}>
-            Réessayer
-          </Button>
-        </Box>
-      </MainLayout>
-    );
-  }
-
-  const completedResults = results.filter(r => r.status === 'completed');
-  const processingResults = results.filter(r => r.status === 'processing');
-  const failedResults = results.filter(r => r.status === 'failed');
-
   return (
-    <MainLayout title="Tous les Résultats">
-      <Box sx={{ p: 3, width: '100%' }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
-          Tous les Résultats
-        </Typography>
-
-        {results.length === 0 ? (
-          <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-            Aucun résultat disponible
-          </Typography>
-        ) : (
-          <>
-            {/* Résultats en cours */}
-            {processingResults.length > 0 && (
-              <>
-                <Typography variant="h5" sx={{ mb: 2, color: 'warning.main' }}>
-                  En cours de traitement ({processingResults.length})
-                </Typography>
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                  {processingResults.map((result) => (
-                    <Grid item xs={12} sm={6} md={4} key={result.image_id}>
-                      <ResultItem result={result} onViewDetails={(id) => navigate(`/results/${id}`)} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </>
-            )}
-
-            {/* Résultats terminés */}
-            {completedResults.length > 0 && (
-              <>
-                <Typography variant="h5" sx={{ mb: 2, color: 'success.main' }}>
-                  Terminés ({completedResults.length})
-                </Typography>
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                  {completedResults.map((result) => (
-                    <Grid item xs={12} sm={6} md={4} key={result.image_id}>
-                      <ResultItem result={result} onViewDetails={(id) => navigate(`/results/${id}`)} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </>
-            )}
-
-            {/* Résultats échoués */}
-            {failedResults.length > 0 && (
-              <>
-                <Typography variant="h5" sx={{ mb: 2, color: 'error.main' }}>
-                  Échoués ({failedResults.length})
-                </Typography>
-                <Grid container spacing={3}>
-                  {failedResults.map((result) => (
-                    <Grid item xs={12} sm={6} md={4} key={result.image_id}>
-                      <ResultItem result={result} onViewDetails={(id) => navigate(`/results/${id}`)} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </>
-            )}
-          </>
-        )}
+    <Box sx={{ flexGrow: 1, backgroundColor: '#F1F8E9', minHeight: '100vh' }}>
+      <AppBar position="sticky" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none', borderBottom: '1px solid #e0e0e0' }}>
+        <Toolbar>
+          <IconButton onClick={() => navigate('/dashboard')}><ArrowBack /></IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold', ml: 2 }}>Tous les Résultats</Typography>
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Rechercher..."
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><Search /></InputAdornment>,
+              sx: { borderRadius: 2, backgroundColor: '#f7f8fa', '& fieldset': { border: 'none' } }
+            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Toolbar>
+      </AppBar>
+      <Box sx={{ p: 3 }}>
+        <Grid container spacing={3}>
+          {filteredResults.map((result) => (
+            <Grid item xs={12} sm={6} md={4} key={result.id}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between',
+                  borderRadius: '20px', 
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    animation: `${cardHover} 0.3s ease forwards`,
+                    cursor: 'pointer',
+                  }
+                }}
+                onClick={() => navigate(`/results/${result.id}`)}
+              >
+                <CardContent>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>{result.title}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <CalendarToday sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                    <Typography variant="body2" color="text.secondary">{result.dateTraitement}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <SquareFoot sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                    <Typography variant="body2" color="text.secondary">{result.zoneCouverture}</Typography>
+                  </Box>
+                  <Chip 
+                    label={result.statut} 
+                    sx={{
+                      backgroundColor: getStatusColor(result.statut),
+                      color: 'white',
+                      fontWeight: 'bold',
+                      borderRadius: '8px',
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </Box>
-    </MainLayout>
+    </Box>
   );
 };
 
