@@ -16,7 +16,7 @@ interface NotificationItemProps {
   onDelete: (id: string) => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMarkAsRead, onDelete }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMarkAsRead}) => {
   const navigate = useNavigate();
 
   const getIcon = (type: string) => {
