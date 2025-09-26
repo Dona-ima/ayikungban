@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Container, Paper, CircularProgress, Alert } from '@mui/material';
-import { requestOtp } from '../services/authservices';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,10 +34,30 @@ const LoginPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await requestOtp(npi, email);
-      navigate('/otp', { state: { npi, email } });
+      // Simuler un appel API pour la vérification NPI et l'envoi d'OTP
+      // Dans une vraie application, vous feriez un fetch/axios ici vers votre backend
+      const response = await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (npi === "12345678" && email === "test@example.com") {
+            resolve({ success: true });
+          } else if (npi === "99999999") {
+            reject({ message: "NPI non reconnu par la plateforme ANIP." });
+          } else {
+            reject({ message: "Erreur lors de la vérification NPI ou de l'envoi d'OTP." });
+          }
+        }, 2000);
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((response as any).success) {
+        navigate('/otp', { state: { npi, email } });
+      } else {
+        // Ceci ne devrait pas être atteint avec le reject ci-dessus, mais pour la robustesse
+        setError("Une erreur inattendue est survenue.");
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Erreur lors de la vérification NPI ou de l'envoi d'OTP.");
+      setError(err.message || "Échec de la connexion. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }

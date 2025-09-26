@@ -1,253 +1,167 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Card, Grid, Chip, Link, CircularProgress } from '@mui/material';
+import { Box, Typography, Card, CardContent, Badge } from '@mui/material';
+import { CheckCircleOutline, InfoOutlined, ErrorOutline, EventNote, CancelOutlined } from '@mui/icons-material';
+import { keyframes } from '@mui/system';
 import MainLayout from '../components/MainLayout';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { notificationService, type Notification } from '../services/notificationService';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+`;
+
+const cardHover = keyframes`
+  from { transform: scale(1); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  to { transform: scale(1.01); box-shadow: 0 8px 24px rgba(0,0,0,0.15); background-color: #A5D6A7; }
+`;
 
 interface NotificationItemProps {
-  notification: Notification;
-  onMarkAsRead: (id: string) => void;
-  onDelete: (id: string) => void;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  timestamp: string;
+  isUnread?: boolean;
+  link?: string;
+  statusColor?: string;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMarkAsRead}) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({ icon, title, description, timestamp, isUnread, link, statusColor }) => {
   const navigate = useNavigate();
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircleOutlineIcon color="success" />;
-      case 'error':
-        return <ErrorOutlineIcon color="error" />;
-      default:
-        return <InfoOutlinedIcon color="info" />;
-    }
-  };
-
-  const getStatusColor = (type: string): "success" | "info" | "warning" | "error" => {
-    switch (type) {
-      case 'success': return 'success';
-      case 'error': return 'error';
-      case 'warning': return 'warning';
-      default: return 'info';
-    }
-  };
-
-  const handleClick = async () => {
-    if (notification.result_id) {
-      await onMarkAsRead(notification.id);
-      if (notification.pdf_url) {
-        window.open(notification.pdf_url, '_blank');
-      } else {
-        navigate(`/results/${notification.result_id}`);
-      }
-    }
-  };
-
   return (
-    <Card sx={{ p: 2, mb: 2, borderRadius: 2, boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)', opacity: notification.read ? 0.7 : 1 }}>
-      <Grid container wrap="nowrap" spacing={2} alignItems="center">
-        <Grid item>
-          <Box sx={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', backgroundColor: '#f0f0f0' }}>
-            {getIcon(notification.type)}
-          </Box>
-        </Grid>
-        <Grid item xs>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{notification.title}</Typography>
-          <Typography variant="body2" color="text.secondary">{notification.message}</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: fr })}
-            </Typography>
-            <Chip 
-              label={notification.read ? 'Lu' : 'Non lu'} 
-              color={getStatusColor(notification.type)} 
-              size="small" 
-              sx={{ height: 20 }} 
-            />
-          </Box>
-        </Grid>
-        {(notification.result_id || notification.pdf_url) && (
-          <Grid item>
-            <Link 
-              component="button" 
-              variant="body2" 
-              onClick={handleClick}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                textDecoration: 'none', 
-                color: '#4caf50' 
-              }}
-            >
-              Voir les résultats <ArrowForwardIcon sx={{ fontSize: 16, ml: 0.5 }} />
-            </Link>
-          </Grid>
+    <Card 
+      sx={{ 
+        p: 2, 
+        mb: 2, 
+        borderRadius: '20px', 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          animation: `${cardHover} 0.3s ease forwards`,
+          cursor: 'pointer',
+        }
+      }}
+      onClick={() => link && navigate(link)}
+    >
+      <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+        {isUnread && (
+          <Badge color="primary" variant="dot" sx={{ mr: 2, animation: `${pulse} 1.5s infinite` }} />
         )}
-      </Grid>
+        <Box sx={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', backgroundColor: statusColor || '#f0f0f0', mr: 2 }}>
+          {icon}
+        </Box>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{title}</Typography>
+          <Typography variant="body2" color="text.secondary">{description}</Typography>
+        </Box>
+        <Typography variant="caption" color="text.secondary">{timestamp}</Typography>
+      </CardContent>
     </Card>
   );
 };
 
 const NotificationsPage: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
-      const data = await notificationService.getNotifications();
-      setNotifications(data);
-      setError(null);
-    } catch (err) {
-      setError('Erreur lors du chargement des notifications');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const notifications = {
+    nouvelles: [
+      {
+        icon: <CheckCircleOutline sx={{ color: 'white' }} />,
+        title: 'Traitement terminé',
+        description: 'Votre levé "Projet Montagne" a été traité avec succès. Les résultats sont disponibles.',
+        timestamp: 'Il y a 5 min',
+        isUnread: true,
+        link: '/results/1',
+        statusColor: '#2E7D32',
+      },
+      {
+        icon: <InfoOutlined sx={{ color: 'white' }} />,
+        title: 'Nouveau message de support',
+        description: 'L\'équipe de support a répondu à votre demande concernant le "Projet Urbain V2".',
+        timestamp: 'Il y a 20 min',
+        isUnread: true,
+        statusColor: '#29B6F6',
+      },
+      {
+        icon: <ErrorOutline sx={{ color: 'white' }} />,
+        title: 'Mise à jour du système',
+        description: 'Une nouvelle version de GeoPlateforme est disponible. Veuillez recharger la page pour en profiter.',
+        timestamp: 'Il y a 1 heure',
+        isUnread: true,
+        statusColor: '#FFB300',
+      },
+    ],
+    cetteSemaine: [
+      {
+        icon: <CancelOutlined sx={{ color: 'white' }} />,
+        title: 'Erreur de téléchargement',
+        description: 'Le téléchargement de votre fichier "Levé_XYZ.tiff" a échoué. Veuillez réessayer.',
+        timestamp: 'Il y a 2 heures',
+        statusColor: '#E53935',
+      },
+      {
+        icon: <CheckCircleOutline sx={{ color: 'white' }} />,
+        title: 'Traitement terminé',
+        description: 'Le levé "Domaine Agricole Sud" est prêt. Accédez aux cartes interactives.',
+        timestamp: 'Il y a 1 jour',
+        link: '/results/2',
+        statusColor: '#2E7D32',
+      },
+      {
+        icon: <EventNote sx={{ color: 'white' }} />,
+        title: 'Réunion planifiée',
+        description: 'Une réunion pour discuter des "Résultats Trimestriels" a été planifiée pour le 25 octobre.',
+        timestamp: 'Il y a 2 jours',
+        statusColor: '#29B6F6',
+      },
+    ],
+    plusAnciennes: [
+      {
+        icon: <InfoOutlined sx={{ color: 'white' }} />,
+        title: 'Rappel de soumission',
+        description: 'Il vous reste 3 jours pour soumettre votre levé pour le concours de "Innovation Géospatiale".',
+        timestamp: 'Il y a 3 jours',
+        statusColor: '#29B6F6',
+      },
+      {
+        icon: <CheckCircleOutline sx={{ color: 'white' }} />,
+        title: 'Traitement terminé',
+        description: 'Le rapport "Cartographie_Forêt_Nord" est maintenant finalisé.',
+        timestamp: 'Il y a 4 jours',
+        link: '/results/3',
+        statusColor: '#2E7D32',
+      },
+    ],
   };
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await notificationService.markAsRead(notificationId);
-      setNotifications(notifications.map(n => 
-        n.id === notificationId ? { ...n, read: true } : n
-      ));
-    } catch (err) {
-      console.error('Erreur lors du marquage comme lu:', err);
-    }
-  };
-
-  const handleDelete = async (notificationId: string) => {
-    try {
-      await notificationService.deleteNotification(notificationId);
-      setNotifications(notifications.filter(n => n.id !== notificationId));
-    } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
-    }
-  };
-
-  const groupNotifications = (notifications: Notification[]) => {
-    const now = new Date();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const oneWeek = 7 * oneDay;
-
-    return {
-      nouvelles: notifications.filter(n => 
-        new Date(n.created_at).getTime() > now.getTime() - oneDay
-      ),
-      cetteSemaine: notifications.filter(n => {
-        const date = new Date(n.created_at).getTime();
-        return date <= now.getTime() - oneDay && date > now.getTime() - oneWeek;
-      }),
-      plusAnciennes: notifications.filter(n => 
-        new Date(n.created_at).getTime() <= now.getTime() - oneWeek
-      ),
-    };
-  };
-
-  if (loading) {
-    return (
-      <MainLayout title="Notifications">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-          <CircularProgress />
-        </Box>
-      </MainLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainLayout title="Notifications">
-        <Box sx={{ p: 3 }}>
-          <Typography color="error">{error}</Typography>
-        </Box>
-      </MainLayout>
-    );
-  }
-
-  const groupedNotifications = groupNotifications(notifications);
 
   return (
     <MainLayout title="Notifications">
       <Box sx={{ p: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
-          Notifications
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+          Nouvelles
         </Typography>
+        <Box sx={{ mb: 4 }}>
+          {notifications.nouvelles.map((notif, index) => (
+            <NotificationItem key={index} {...notif} />
+          ))}
+        </Box>
 
-        {/* Nouvelles Notifications */}
-        {groupedNotifications.nouvelles.length > 0 && (
-          <>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
-              Nouvelles
-            </Typography>
-            <Box sx={{ mb: 4 }}>
-              {groupedNotifications.nouvelles.map((notification) => (
-                <NotificationItem 
-                  key={notification.id} 
-                  notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </Box>
-          </>
-        )}
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+          Cette semaine
+        </Typography>
+        <Box sx={{ mb: 4 }}>
+          {notifications.cetteSemaine.map((notif, index) => (
+            <NotificationItem key={index} {...notif} />
+          ))}
+        </Box>
 
-        {/* Cette Semaine */}
-        {groupedNotifications.cetteSemaine.length > 0 && (
-          <>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
-              Cette semaine
-            </Typography>
-            <Box sx={{ mb: 4 }}>
-              {groupedNotifications.cetteSemaine.map((notification) => (
-                <NotificationItem 
-                  key={notification.id} 
-                  notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </Box>
-          </>
-        )}
-
-        {/* Plus Anciennes */}
-        {groupedNotifications.plusAnciennes.length > 0 && (
-          <>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
-              Plus anciennes
-            </Typography>
-            <Box sx={{ mb: 4 }}>
-              {groupedNotifications.plusAnciennes.map((notification) => (
-                <NotificationItem 
-                  key={notification.id} 
-                  notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </Box>
-          </>
-        )}
-
-        {notifications.length === 0 && (
-          <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-            Aucune notification
-          </Typography>
-        )}
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+          Plus anciennes
+        </Typography>
+        <Box sx={{ mb: 4 }}>
+          {notifications.plusAnciennes.map((notif, index) => (
+            <NotificationItem key={index} {...notif} />
+          ))}
+        </Box>
       </Box>
     </MainLayout>
   );

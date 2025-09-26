@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import apiClient from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Container, Paper, CircularProgress, Alert, Link } from '@mui/material';
 
@@ -37,22 +36,26 @@ const OtpPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // Appel API backend pour vérifier l'OTP
-      const response = await apiClient.post('/auth/verify-otp', {
-        npi,
-        otp,
+      // Simuler un appel API pour la validation OTP
+      const response = await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (otp === "123456") { // OTP fictif pour le test
+            resolve({ success: true });
+          } else {
+            reject({ message: "Code OTP incorrect. Veuillez réessayer." });
+          }
+        }, 2000);
       });
 
-      // Si succès, tu peux stocker le token et rediriger
-      const { access_token } = response.data;
-      localStorage.setItem('auth_token', access_token); // Stocke le token pour les prochaines requêtes
-
-      navigate('/dashboard'); // Redirige vers le dashboard
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((response as any).success) {
+        navigate('/dashboard'); // Rediriger vers le tableau de bord après validation
+      } else {
+        setError("Une erreur inattendue est survenue.");
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-        "Échec de la validation OTP. Veuillez réessayer."
-      );
+      setError(err.message || "Échec de la validation OTP. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -63,8 +66,8 @@ const OtpPage: React.FC = () => {
     setError(null);
     setResendMessage(null);
     try {
-      // Appel API backend pour renvoyer l'OTP
-      await apiClient.post('/auth/request-otp', { npi, email });
+      // Simuler un appel API pour renvoyer l'OTP
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setResendMessage("Un nouveau code OTP a été envoyé à votre adresse email.");
     } catch {
       setError("Échec du renvoi de l'OTP. Veuillez réessayer.");

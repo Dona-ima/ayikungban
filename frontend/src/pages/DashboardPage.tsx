@@ -1,176 +1,105 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Grid, Card, CardContent, Typography, Button, Box, List, ListItem, Avatar, ListItemText, ListItemIcon, CircularProgress } from '@mui/material';
-import { PersonOutline, UploadFileOutlined, AssessmentOutlined, NotificationsNoneOutlined, LocationOn, SystemUpdateAlt, Description } from '@mui/icons-material';
-import { getCurrentUser } from '../services/userService';
-import type { User } from '../types';
+import { Grid, Card, CardContent, Typography, Box, Avatar } from '@mui/material';
+import { PersonOutline, UploadFileOutlined, AssessmentOutlined, NotificationsNoneOutlined } from '@mui/icons-material';
+import { keyframes } from '@mui/system';
 import MainLayout from '../components/MainLayout';
+
+const cardHover = keyframes`
+  from { transform: scale(1); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  to { transform: scale(1.03); box-shadow: 0 8px 24px rgba(0,0,0,0.15); background-color: #A5D6A7; }
+`;
 
 const quickAccessItems = [
   {
     title: 'Informations Personnelles',
     path: '/profile',
-    icon: <PersonOutline sx={{ fontSize: 40, color: '#4caf50' }} />,
+    icon: <PersonOutline sx={{ fontSize: 40 }} />,
     description: 'Gérez et mettez à jour votre profil et vos coordonnées.',
   },
   {
     title: 'Uploader un Levé',
     path: '/upload',
-    icon: <UploadFileOutlined sx={{ fontSize: 40, color: '#4caf50' }} />,
+    icon: <UploadFileOutlined sx={{ fontSize: 40 }} />,
     description: 'Soumettez de nouvelles données topographiques pour traitement.',
   },
   {
     title: 'Mes Résultats',
     path: '/results',
-    icon: <AssessmentOutlined sx={{ fontSize: 40, color: '#4caf50' }} />,
+    icon: <AssessmentOutlined sx={{ fontSize: 40 }} />,
     description: 'Consultez l\'historique et les détails de vos levés traités.',
   },
   {
     title: 'Notifications',
     path: '/notifications',
-    icon: <NotificationsNoneOutlined sx={{ fontSize: 40, color: '#4caf50' }} />,
+    icon: <NotificationsNoneOutlined sx={{ fontSize: 40 }} />,
     description: 'Recevez des mises à jour sur l\'état de vos levés et annonces.',
   },
 ];
 
-const recentActivities = [
-    {
-      icon: <LocationOn />,
-      primary: 'Levé "Projet Montagne" terminé. Résultats disponibles.',
-      secondary: 'Il y a 2 heures',
-    },
-    {
-      icon: <UploadFileOutlined />,
-      primary: 'Nouveau levé "Terrain Urbain" a été téléchargé avec succès.',
-      secondary: 'Il y a 1 jour',
-    },
-    {
-      icon: <SystemUpdateAlt />,
-      primary: 'Mise à jour du système : Amélioration de la précision des calculs.',
-      secondary: 'Il y a 3 jours',
-    },
-    {
-      icon: <Description />,
-      primary: 'Rapport détaillé pour "Champ Agricole" généré.',
-      secondary: 'Il y a 5 jours',
-    },
-  ];
-  
-
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const today = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = today.toLocaleDateString('fr-FR', dateOptions);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getCurrentUser();
-        setUser(userData);
-      } catch (err) {
-        setError("Erreur lors du chargement des données utilisateur");
-        console.error("Erreur:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
   return (
     <MainLayout title="Tableau de Bord">
       <Box sx={{ p: 3 }}>
-        <Box sx={{ backgroundColor: '#4caf50', color: 'white', p: 4, borderRadius: 2, mb: 4 }}>
-        {loading ? (
-          <CircularProgress color="inherit" />
-        ) : error ? (
-          <Typography color="error">{error}</Typography>
-        ) : user ? (
-          <>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Bonjour, {user.sex === 'M' ? 'M.' : 'Mme'} {user.last_name} !
-            </Typography>
-            <Typography variant="subtitle1">
-              Bienvenue sur GeoPlateforme. Explorez vos projets.
-            </Typography>
-            <Typography variant="caption" display="block" mt={2}>
-              {formattedDate}
-            </Typography>
-          </>
-        ) : (
-          <Typography>Aucune donnée utilisateur disponible</Typography>
-        )}
+        <Box sx={{ backgroundColor: '#2E7D32', color: 'white', p: 4, borderRadius: '20px', mb: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Bonjour, M. Dupont !
+          </Typography>
+          <Typography variant="body1">
+            Bienvenue sur GeoPlateforme. Explorez vos projets.
+          </Typography>
+          <Typography variant="caption" display="block" mt={2}>
+            {formattedDate}
+          </Typography>
         </Box>
 
-        <Typography variant="h5" component="h2" gutterBottom>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
           Accès Rapide
         </Typography>
         <Grid container spacing={4} sx={{ mb: 4 }} alignItems="stretch">
           {quickAccessItems.map((item) => (
             <Grid item xs={12} sm={6} md={3} key={item.title}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                    <Avatar sx={{ backgroundColor: '#e8f5e9', width: 60, height: 60 }}>
-                      {item.icon}
-                    </Avatar>
-                  </Box>
-                  <Typography gutterBottom variant="h6" component="div" sx={{ textAlign: 'center', fontWeight: '600' }}>
+              <Card 
+                sx={{
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between',
+                  borderRadius: '20px', 
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    animation: `${cardHover} 0.3s ease forwards`,
+                    cursor: 'pointer',
+                  }
+                }}
+                onClick={() => navigate(item.path)}
+              >
+                <CardContent sx={{ textAlign: 'center', flexGrow: 1 }}>
+                  <Avatar sx={{ backgroundColor: '#81C784', width: 60, height: 60, margin: 'auto', mb: 2 }}>
+                    {item.icon}
+                  </Avatar>
+                  <Typography gutterBottom variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
                     {item.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', fontSize: '0.8rem' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                     {item.description}
                   </Typography>
                 </CardContent>
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-                  <Button 
-                    variant="contained" 
-                    sx={{ 
-                      backgroundColor: '#4caf50', 
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-                      borderRadius: '0.5rem',
-                      textTransform: 'none',
-                      '&:hover': { 
-                        backgroundColor: '#388e3c',
-                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)'
-                      } 
-                    }}
-                    onClick={() => navigate(item.path)}
-                  >
-                    Accéder
-                  </Button>
-                </Box>
               </Card>
             </Grid>
           ))}
         </Grid>
 
-        <Typography variant="h5" component="h2" gutterBottom>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
           Activité Récente
         </Typography>
-        <Card>
-          <List>
-            {recentActivities.map((activity, index) => (
-              <ListItem key={index} divider={index < recentActivities.length - 1}>
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  {activity.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={activity.primary}
-                  secondary={activity.secondary}
-                  primaryTypographyProps={{ variant: 'body1' }}
-                  secondaryTypographyProps={{ align: 'right' }}
-                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Card>
+        {/* Recent Activity Section would go here */}
       </Box>
     </MainLayout>
   );
